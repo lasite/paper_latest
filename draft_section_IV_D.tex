@@ -1,0 +1,121 @@
+% ─────────────────────────────────────────────────────────────────
+%  Draft of §IV.D (hidden hot-runaway + IC hysteresis prediction) —
+%  to replace existing §IV.E (Hidden multistability, lines 609–696
+%  of main.tex).  Pulls in figure D2 (hysteresis_C_theta0) and
+%  D1 (refined basin at C-cell), and inherits Fig.6 (a),(b),(c).
+% ─────────────────────────────────────────────────────────────────
+
+\subsection{A hidden hot-runaway state and the IC-induced hysteresis
+prediction}
+\label{sec:multistability}
+
+Sec.~\ref{sec:lsa_vs_nl} closed by asking whether the C-region of
+the parameter plane—where the swollen homogeneous SS does not exist
+yet the PDE oscillates—corresponds to genuine attractor multiplicity
+of the spatially extended problem.  We resolve this by initial-
+condition (IC) sweeps at a representative C-cell
+($\Bi_T=0.059$, $S_\chi=1.80$).
+
+\paragraph{Two co-existing attractors.}
+At identical bath conditions and reaction parameters, simulations
+initialized in different regions of $(J_0, \theta_0)$ space converge
+to one of two qualitatively distinct attractors
+[Fig.~\ref{fig:fig_manifold}(c)]: (i)~the LCST-front cycle of
+Sec.~\ref{sec:lcst_front_mechanism}, with bulk-mean
+$\langle J\rangle\!\approx\!2$,
+$\langle\theta\rangle\!\approx\!2$, and (ii)~a previously-unreported
+\emph{hot-runaway} steady state with
+$\langle J\rangle\!\approx\!5$,
+$\langle\theta\rangle\!\approx\!12$.
+The two attractors differ by
+$\Delta\langle J\rangle\!\approx\!3.3$ and
+$\Delta\langle\theta\rangle\!\approx\!10$, far beyond any numerical
+tolerance, so the bistability is genuine.
+
+\paragraph{Spatial structure and mechanism of the hot-runaway state.}
+The hot-runaway state [Fig.~\ref{fig:fig_manifold}(b)] is spatially
+uniform with $J\!\simeq\!5.2$, $\theta\!\simeq\!12$,
+$\varphi\!\simeq\!0.026$, and a thin reaction layer at the surface
+where reactant is consumed almost entirely
+($u_\mathrm{surf}\!\sim\!10^{-7}$).  The mechanism is diffusion-
+limited combustion: the high-$\theta$ Arrhenius factor exceeds
+$10^5$ and burns through any reactant in the boundary layer, but the
+surface BC continues to deliver reactant at the diffusion-limited
+rate $\Bi_c$.  The gel remains super-swollen because the high-$J$
+Flory--Huggins minimum coexists with the collapsed minimum whenever
+$\chi_\mathrm{eff}$ is sufficiently large; at $\varphi\!\sim\!0.026$
+the $\chi_\mathrm{eff}\,\varphi^2$ penalty is negligible and the
+elastic term $\Omega_e\,(J-1/J)$ becomes the dominant contribution to
+the chemical potential.  The choice between the two
+Flory--Huggins minima is set by the IC: trajectories landing in the
+basin of the swollen branch reach hot-runaway, while trajectories
+landing in the basin of the collapsed branch are ejected to the
+LCST-front cycle by the surface BC and the diffusion-barrier
+feedback.
+
+\paragraph{Basin asymmetry and why the default sweep misses the
+runaway.}
+A refined IC sweep on a $15\times 15$ grid at the C-cell
+[Fig.~\ref{fig:fig_manifold}(c)] places the basin boundary at
+roughly $J_0\!\approx\!1.0$, $\theta_0\!\approx\!1$: only ICs in the
+upper-left quadrant of $(J_0, \theta_0)$ space (cold, swollen) reach
+the cycle.  ICs with any of (i)~$J_0\!\lesssim\!0.4$ (pre-collapsed),
+(ii)~$\theta_0\!\gtrsim\!3$ (ignited), or (iii)~combinations
+spanning the basin boundary fall into the runaway.  The basin of
+the cycle covers
+$\sim\!13\%$ of the IC grid (16 of the 119 successfully integrated
+cells of an $11{\times}11$ grid spanning $J_0\in[0.20,1.30]$,
+$\theta_0\in[0,10]$), a small fraction of the total. This asymmetry explains why the default
+cold-IC sweep of Fig.~\ref{fig:fig4_phase} sees only the cycle and
+never the runaway: the default cold IC sits well inside the cycle's
+basin at every grid point of the parameter sweep.
+
+\paragraph{IC-induced hysteresis: a falsifiable prediction.}
+A 1D slice through the basin space gives a quantitative,
+experimentally accessible signature of the bistability
+[Fig.~\ref{fig:fig_manifold}(d)].  Holding all reaction and bath
+parameters fixed at the C-cell value with the initial reactant
+loading $u_0=0.5$, we vary the initial thermal pulse $\theta_0$ from
+$0$ to $6$ for two seed conditions:
+\begin{itemize}
+\item ``cold'' seed ($J_0=1.30$): initially near the cold-swollen
+  homogeneous state.  For $\theta_0$ below the threshold
+  $\theta_0^{\!*}\!\approx\!2.4$ the trajectory remains in the
+  cycle's basin and
+  $\langle J\rangle_\mathrm{late}\!\approx\!2.0$;
+  for $\theta_0$ above the threshold the seed crosses the basin
+  boundary and
+  $\langle J\rangle_\mathrm{late}\!\approx\!5.9$,
+  indistinguishable from the runaway state.  The transition is
+  sharp—the discontinuity in $\langle J\rangle_\mathrm{late}$ falls
+  within a single $\Delta\theta_0=0.25$ sampling step.
+\item ``pre-collapsed'' seed ($J_0=0.20$): initialized inside the
+  runaway basin; for every $\theta_0$ in the scanned range the
+  trajectory terminates in the runaway-type state with
+  $\langle J\rangle_\mathrm{late}\!\approx\!4.2\text{--}5.5$,
+  independent of $\theta_0$.
+\end{itemize}
+The split between the two terminal-state curves over the bistable
+$\theta_0$ interval $[0, 2.4]$ is the hysteresis signature.
+Experimentally, this would manifest as a sharp jump in long-time
+gel volume (or temperature) when the initial perturbation magnitude
+is varied across $\theta_0^{\!*}$, with no return jump on the
+reverse sweep so long as the C-cell parameters are held fixed.
+This is a quantitative prediction of the model that the linear
+theory does not provide and that distinguishes spatially-extended
+thermo-LCST gels from the well-mixed CSTR
+analog~\cite{Uppal1974}.
+
+\paragraph{Summary.}
+The PDE attractor diagram is therefore richer than the single-IC
+sweep of Fig.~\ref{fig:fig4_phase} suggests, and richer than 0D LSA
+can predict.  The hot-runaway state is invisible to both linear
+analysis and to default-IC numerical scans, and its appearance is
+contingent on the structure of the basin of attraction in IC space.
+Combined with the slow-manifold relaxation cycle of
+Sec.~\ref{sec:lcst_front_mechanism}, this completes a four-attractor
+inventory of the spatially extended problem (cold-swollen, LCST-
+front cycle, frozen front, hot-runaway), whose existence and
+stability are governed not by any single homogeneous-state
+linearization but by the spatial coupling between the Flory--Huggins
+free energy and the $\varphi$-dependent diffusion barrier.

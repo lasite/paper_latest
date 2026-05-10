@@ -1,0 +1,43 @@
+{
+  "period": 10.90109010901088,
+  "phases": [
+    {
+      "name": "phase1: ignite (slow, swollen branch)",
+      "dt": 3.225322532253216,
+      "dJ": 0.6826194928078072,
+      "dtheta": 3.312886031649433,
+      "dJ_dt": 0.21164379251427237,
+      "dtheta_dt": 1.0271487575337295,
+      "fraction_of_period": 0.29587155963302725
+    },
+    {
+      "name": "phase2 window (peak->trough_theta)",
+      "dt": 4.400440044004398,
+      "dJ": -0.6656229080705118,
+      "dtheta": -3.313125293979944,
+      "dJ_dt": -0.1512628058590239,
+      "dtheta_dt": -0.7529077230569426,
+      "fraction_of_period": 0.4036697247706428
+    },
+    {
+      "name": "phase3: cool/quench (slow, collapsed branch)",
+      "dt": 0.0,
+      "dJ": 0.0,
+      "dtheta": 0.0,
+      "dJ_dt": NaN,
+      "dtheta_dt": NaN,
+      "fraction_of_period": 0.0
+    },
+    {
+      "name": "phase4 window (re-swell + restart)",
+      "dt": 3.1753175317531657,
+      "dJ": 0.0993425363127054,
+      "dtheta": 3.305518190239243,
+      "dJ_dt": 0.031285858916243914,
+      "dtheta_dt": 1.0410039806047966,
+      "fraction_of_period": 0.29128440366972447
+    }
+  ],
+  "fast_collapse_rate_J": -12.384799678448577,
+  "fast_reswell_rate_J": 16.342245047591742
+}
