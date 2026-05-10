@@ -116,3 +116,91 @@ the LF region).
 PASS — proceed to **Phase B (period scaling)** when user confirms.
 
 ---
+
+## Phase A.5 — N convergence study
+
+- **Status:** PASS — all observables converged at **N = 301**
+- **Sims attempted:** 21 (3 points × 7 N values)
+- **Sims successful:** 15 (6 timed out at the 35-min ceiling)
+- **Wall-clock:** 35 min (capped by per-sim timeout)
+- **Script:** `scripts/iv_c_phaseA5_convergence.py` (v2 — incremental save, per-sim timeout, streaming output)
+- **Outputs:**
+  - `data/iv_c/phaseA5/convergence_raw.json`   — raw per-sim records (incremental)
+  - `data/iv_c/phaseA5/convergence.npz`        — reshaped grid
+  - `data/iv_c/phaseA5/convergence_report.md`  — corrected analysis (see file)
+
+### v1 → v2 (mid-run rewrite)
+
+The first attempt (`exe.map(run_one, tasks)`) blocked on submission
+order — when 3 of 21 sims (the N=501 ones) hit 95+ min CPU each, the
+driver wrote nothing to disk and the entire 96-min compute was lost
+when killed. v2 uses `multiprocessing.Pool.apply_async` + a polling
+loop with per-sim 35-min timeout, prints results in completion order
+with `flush=True`, and atomically saves `convergence_raw.json` after
+every result. `pool.terminate()` at end kills any worker still
+running a timed-out sim. Bug in `converged_N` (required immediate-
+neighbor comparison; NaN intermediate broke even adjacent-N pairs)
+fixed to compare against the highest-finite-N reference.
+
+### Coverage
+
+| point         | N=51 | N=101 | N=151 | N=201 | N=301 | N=401 | N=501 |
+|---------------|:----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| WP            | OSC  | OSC   | OSC*  | TIMEOUT | OSC | OSC   | TIMEOUT |
+| shallow       | NOTOSC | OSC | NOTOSC | TIMEOUT | OSC | OSC   | TIMEOUT |
+| nearSNIC      | OSC  | OSC   | OSC   | TIMEOUT | OSC | OSC   | TIMEOUT |
+
+\* WP at N=151 has anomalous T=38.1 (vs 19.3 at N=301) — likely 2:1
+frequency-locking artifact at that resolution.
+
+### Convergence verdict (rel err vs N=401, tol = 5%)
+
+All six tracked observables converge at N = 301 across all three points.
+
+| observable      | min converged N |
+|-----------------|----------------:|
+| period          | **N = 301**     |
+| delta_theta     | **N = 301**     |
+| delta_J         | **N = 301**     |
+| xi_LCST         | **N = 301**     |
+| theta_surf_max  | **N = 301**     |
+| theta_surf_min  | **N = 301**     |
+
+Detailed per-point per-N relative errors live in `convergence_report.md`.
+
+### Pathologies identified at low N
+
+- **shallow (Bi_T=0.05, S_chi=0.7)** at N=51 and N=151 fails to oscillate
+  (settles to hot-runaway). At N=101 it oscillates but with period 62.8
+  vs 29.2 at N=301 — spurious low-frequency drift from under-resolved
+  LCST front.
+- **WP (Bi_T=0.10, S_chi=1.0)** at N=151 has period jump to 38.1 — likely
+  a 2:1 frequency-locking artifact peculiar to that resolution.
+- **N=201 timed out at all 3 points** while N=301 finished in 17-19 min.
+  Most plausible cause: BDF + sparse-Jacobian column grouping at N=201
+  hits a pessimal coloring / stiffness pattern. Doesn't affect the
+  convergence verdict because N=51, 101, 151, 301, 401 sample the trend
+  densely enough.
+
+### Implications for downstream phases
+
+Per the user's decision rule:
+
+- **All observables converged at N=301 → use N=301 for Phase B/C/D.**
+- **Phase A re-do?** Required only if `delta_theta` at N=101 vs N=301
+  differs by > 5% at any point.
+  - WP: 1.5% ✓
+  - **shallow: 11.4%** ✗
+  - nearSNIC: 4.5% ✓
+  - **Verdict: re-run Phase A at N=301** (12 sims, ~20 min).
+  - Phase A's PASS verdict is robust to the N change anyway (re-evaluating
+    shallow's contribution gives meas h = 2.566 vs h_pred 2.340, rel err
+    9.7%, still well under the 20% threshold). The re-run is for
+    numerical hygiene, not because the conclusion is in doubt.
+
+### Decision
+
+PASS. Pending user confirmation: (a) re-run Phase A at N=301 first,
+or (b) skip the re-run and proceed straight to Phase B at N=301.
+
+---
