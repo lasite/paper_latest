@@ -203,4 +203,81 @@ Per the user's decision rule:
 PASS. Pending user confirmation: (a) re-run Phase A at N=301 first,
 or (b) skip the re-run and proceed straight to Phase B at N=301.
 
+User picked (b) — skip Phase A re-run.
+
+---
+
+## Phase B — Period scaling
+
+- **Status:** PASS (max rel err 13.5% < 30% threshold)
+- **Sims run:** 25 PDE on a 5×5 (Bi_T, S_chi) grid at N=301
+- **Wall-clock:** 22.5 min (24 workers, t_end=400)
+- **Scripts:** `scripts/iv_c_phaseB_period.py`, `scripts/iv_c_phaseB_check.py`
+- **Outputs:**
+  - `data/iv_c/phaseB/period_raw.json`     — per-sim records (incremental)
+  - `data/iv_c/phaseB/period_scan.npz`     — reshaped 5×5 grids
+  - `data/iv_c/phaseB/phaseB_check.npz`    — decision summary
+  - `Figure/pub/iv_c_period_collapse.{pdf,png}` — collapse figure
+
+### Grid choice
+
+Plan-suggested grid `Bi_T ∈ {0.04..0.26}, S_chi ∈ {0.5..1.6}` overlaps
+with steady-front and steady-cold regions per the fig4 phase diagram
+(esp. Bi_T ≥ 0.16 and S_chi ≤ 0.7). Retuned grid:
+
+- `Bi_T_vals = [0.04, 0.05, 0.07, 0.09, 0.12]`  — small Bi_T to access asymptote
+- `S_chi_vals = [0.9, 1.0, 1.1, 1.3, 1.5]`  — robust LF strip
+
+### Surprise finding: Bi_T = 0.04 fails to oscillate at long t
+
+All 5 `(Bi_T=0.04, S_chi)` points settle to **hot-runaway SS** (J ≈ 0.157,
+the collapsed-gel asymptote φ → 1) over `t ∈ (200, 400)`, even at
+N=301. The fig4 phase diagram (also N=301 but t_end=200) showed these
+as LF.
+
+The discrepancy is almost certainly **t_end**: fig4 used t_end=200 and
+caught the initial ignition transient as oscillation, but extending to
+t_end=400 reveals these points eventually drift into hot-runaway. This
+is consistent with the relaxation-oscillator picture — at very small
+Bi_T the cooling phase becomes too slow to recover from runaway
+ignition, so the limit cycle ceases to exist as an attractor.
+
+7 NOT_OSC points total: all 5 Bi_T=0.04 + (Bi_T=0.05, S_chi=1.3) +
+(Bi_T=0.05, S_chi=1.5).
+
+This narrows the usable Bi_T range to [0.05, 0.12] for low S_chi and
+[0.07, 0.12] for high S_chi — still 4 / 3 points per S_chi line, enough
+to verify the scaling.
+
+### Result table — oscillating points
+
+| S_chi | ln(θ_up/θ_lo) | smallest Bi_T | T·Bi_T at smallest | rel err |
+|------:|--------------:|--------------:|-------------------:|--------:|
+| 0.90  | 1.3276        | 0.05          | 1.3937             | 4.98%   |
+| 1.00  | 1.3276        | 0.05          | 1.3832             | 4.19%   |
+| 1.10  | 1.3276        | 0.05          | 1.3846             | 4.29%   |
+| 1.30  | 1.3276        | 0.07          | 1.4931             | 12.47%  |
+| 1.50  | 1.3276        | 0.07          | 1.5063             | 13.46%  |
+
+- max rel err: **13.5%** (PASS threshold 30%)
+- mean rel err: 7.9%
+- ln(θ_up/θ_lo) ≈ 1.33 is essentially **constant across S_chi** (because
+  θ_up and θ_lo both scale as 1/S_chi at fixed material parameters);
+  the period collapse is to a single number.
+
+### Trend check
+
+For each S_chi, T·Bi_T monotonically decreases toward 1.33 as Bi_T → 0,
+**always approaching from above**, consistent with the analytic correction
+`T·Bi_T = ln(θ_up/θ_lo) + Bi_T·e^(-Γ_A·θ_lo)/(Da·J*·(1−φ*)^m_act·Γ_A)`
+which is positive for Bi_T > 0.
+
+The departure is steeper at low S_chi (S_chi=0.9: Bi_T=0.12 → T·Bi_T=2.56,
+86% above asymptote) than at high S_chi (S_chi=1.5: Bi_T=0.12 → 1.93, 45%
+above), consistent with the Frank-Kamenetskii correction prefactor.
+
+### Decision
+
+PASS — proceed to **Phase C (onset threshold)** when user confirms.
+
 ---
