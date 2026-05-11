@@ -540,3 +540,104 @@ mechanism don't match the leading-order derivation; reframe qualitatively
 in the §IV.C write-up).
 
 ---
+
+## L_T Patch — Front-depth scaling in the thermal-limited regime
+
+- **Status:** FAIL (LF cycle envelope incompatible with L_T < L_c probing)
+- **Sims run:** 6 (1 L_T.1 feasibility + 4 L_T.2 sweep + 1 Fallback B feasibility)
+- **Wall-clock:** ~50 min total
+- **Scripts:**
+  - `scripts/iv_c_lt_patch_feasibility.py`
+  - `scripts/iv_c_lt_patch_sweep.py`
+  - `scripts/iv_c_lt_patch_fallbackB_feasibility.py`
+  - `scripts/iv_c_lt_patch_plot.py`
+- **Outputs:**
+  - `data/iv_c/lt_patch/feasibility.npz`
+  - `data/iv_c/lt_patch/sweep_final.npz`, `sweep_summary.json`
+  - `data/iv_c/lt_patch/sim_BiT{0.06,0.10,0.16,0.25}.npz`
+  - `data/iv_c/lt_patch/fallbackB_feasibility.npz`
+  - `Figure/pub/iv_c_lt_collapse.{pdf,png}` (Phase D vs L_T patch)
+
+### Motivation
+
+Phase D verified the front-depth scaling
+`(1 − xi_LCST) = c · min(L_T, L_c)` with `c ≈ 0.388 ± 0.002`, BUT
+only in the L_c-limited branch: at default params (`alpha=0.20,
+delta=0.08, Bi_c=0.70`), `L_T ∈ [0.89, 1.83]` while `L_c = 0.338`,
+so `min(L_T, L_c) = L_c` throughout. To verify the law generalizes,
+we need at least one data set with `L_T < L_c`.
+
+### L_T.1 feasibility — PASS
+
+Single sim at `Bi_T=0.10, alpha=0.04, delta=0.50, Bi_c=0.70, N=301, t_end=400`.
+With these, `L_T = 0.633 < L_c = 0.845`.
+
+- LF cycle survives: `is_oscillating = True`, `J_surf ∈ [0.153, 1.229]`
+- `xi_LCST = 0.8754` → `1 − xi = 0.1246`
+- `(1 − xi)/L_T = 0.197`   ← notably **half** the Phase D plateau (0.388)
+- wall: 23.5 min
+
+### L_T.2 sweep — FAIL_INSUFFICIENT_POINTS
+
+Four sims, `Bi_T ∈ {0.06, 0.10, 0.16, 0.25}` at the same patch params.
+
+| Bi_T | L_T   | osc?  | xi_LCST | wall (min) | outcome           |
+|-----:|------:|:-----:|--------:|-----------:|:------------------|
+| 0.06 | 0.816 | False | 0.9950  |        3.0 | frozen-near-surface |
+| 0.10 | 0.632 | **True**  | 0.8754  |       24.0 | cycle (only this point) |
+| 0.16 | 0.500 | False | 0.8854  |        0.6 | frozen-front        |
+| 0.25 | 0.400 | False | 0.7425  |        0.5 | frozen-front        |
+
+Only the Bi_T = 0.10 case oscillates — the LF cycle window in
+Bi_T is too narrow once `alpha` is shrunk by 5x. The integrator
+finishes fast on the three non-oscillating points because once a
+non-cycle steady state is reached, BDF takes very large steps.
+
+### Fallback B — FAIL_NOT_OSCILLATING
+
+Plan §6 fallback: keep `alpha = 0.20` (default), inflate `delta`
+to 2.00 (25x default) to push L_c well above L_T. Test point
+`Bi_T = 0.10`: gives `L_T = 1.414 < L_c = 1.690`.
+
+Result: cycle dies — `J_surf` flat at 0.153 (uniform near-deswollen
+surface), `xi_LCST = 0.995` (no real front), `is_oscillating = False`.
+Cause: at `delta = 2.00`, reactant supply outruns chemistry across
+the slab; the system settles to a uniform deswollen-surface SS rather
+than oscillating.
+
+Per plan §7 budget (1 fallback retry), no further fallbacks attempted.
+Fallback A doesn't help geometrically; Fallback C (`Bi_c → 0.05`) was
+flagged in the plan as "risky for cycle survival" with marginal `L_T/L_c`
+gain.
+
+### What the one valid L_T point tells us
+
+Single L_T-branch data point:
+`(L_T, L_c, 1-xi) = (0.632, 0.845, 0.125)` → ratio to L_T is **0.197**,
+to L_c is 0.148, to min is 0.197. Phase D plateau is **0.388**.
+
+The L_T-branch point sits at roughly **half** the Phase D plateau on the
+combined collapse plot (`iv_c_lt_collapse.{pdf,png}`). If the unified
+form `1 − xi = c · min(L_T, L_c)` with a single `c` were correct, this
+point should sit on the Phase D line; it does not. The simplest
+interpretation: the prefactor depends on which length is limiting —
+roughly 0.2 in the L_T branch versus 0.4 in the L_c branch — i.e. the
+front geometry near the thermal-limited end differs from the
+reactant-limited end. With only one data point in the L_T branch this
+is suggestive, not conclusive.
+
+### Decision
+
+The L_T-branch scaling could not be cleanly verified inside the LF
+cycle's parameter envelope (cycle is too narrow in Bi_T once we
+shrink alpha; cycle dies entirely when delta is grown). §IV.C will
+report `(1 − xi_LCST) ∝ L_c` in the parameter region scanned and
+note that the L_T-limited branch is computationally inaccessible
+within the LF-cycle envelope at the parameters used — left for
+future work (the geometry-and-penetration paper splits this out
+explicitly).
+
+This does not change the Phase D PASS verdict; it sharpens the
+caveat on the scaling claim.
+
+---
