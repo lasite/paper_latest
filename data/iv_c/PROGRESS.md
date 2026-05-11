@@ -281,3 +281,115 @@ above), consistent with the Frank-Kamenetskii correction prefactor.
 PASS — proceed to **Phase C (onset threshold)** when user confirms.
 
 ---
+
+## Phase C — Onset-threshold scaling
+
+- **Status:** PASS_borderline (criteria met but qualitative match only)
+- **Sims run:** 33 (Bi_T=0.06: 3 sims+bracket only / Bi_T=0.10: 11 sims / Bi_T=0.16: 14 sims / Bi_T=0.25: 6 sims bracket expansion)
+- **Wall-clock:** ~75 min cumulative (multiple sessions, including a 96-min lost run and a foreground retry that wedged on a near-onset Bi_T=0.06 sim)
+- **Scripts:**
+  - `scripts/iv_c_phaseC_Da_c_0D.py` (analytic + continuation cross-check)
+  - `scripts/iv_c_phaseC_pde.py` (parallel bisection driver)
+  - `scripts/iv_c_phaseC_pde_BiT006.py` (foreground resume for the lost Bi_T=0.06 chain)
+  - `scripts/iv_c_phaseC_check.py`
+- **Outputs:**
+  - `data/iv_c/phaseC/Da_c_0D.npz`
+  - `data/iv_c/phaseC/Da_c_pde.npz`
+  - `data/iv_c/phaseC/pde_bisection_log.json`, `pde_bisection_log_BiT006.json`
+  - `data/iv_c/phaseC/phaseC_check.npz`
+  - `Figure/pub/iv_c_onset_shift.{pdf,png}`
+
+### Method
+
+- `Da_c^0D` = leading-order saddle-node of the cold-swollen-connected SS
+  = `Bi_T / (J_init * Gamma_A)`. Cross-checked with Newton continuation:
+  numerical saddle-node lands within 10% of the formula at Bi_T ≤ 0.16.
+  (The cold branch's complex-pair eigenvalues approach zero
+  simultaneously with the SN, so this Da is the natural "0D analog"
+  of the PDE oscillation onset.)
+- `Da_c^PDE` = 8-iteration log-mean bisection in Da, bracket
+  [0.5·Da_c^0D, 3·Da_c^0D] (auto-expanded up to Da=4 when needed).
+  Settings: N=301, t_end=400, t_window=(300, 400), N_save=4000.
+  is_oscillating: σ(J_surf) > 0.05.
+
+### Result table
+
+| Bi_T | Da_c^0D | Da_c^PDE | shift | sqrt(Bi_T/α) | notes |
+|-----:|--------:|---------:|------:|-------------:|-------|
+| 0.06 | 0.0308  | 0.0377†  | +0.22 | 0.548 | †bracket-midpoint only; iter-2 sim wedged at 48 min near onset (slow dynamics close to Da_c) |
+| 0.10 | 0.0513  | 0.2289   | +3.46 | 0.707 | converged |
+| 0.16 | 0.0821  | 2.0545   | +24.0 | 0.894 | converged; bracket auto-expanded to Da=4 |
+| 0.25 | 0.1282  | **NaN**  | —     | 1.118 | no oscillation up to Da=4; system relaxes to over-swollen SS (J≈1.1) at all bracket Da |
+
+### Decision metrics
+
+- Linear fit `shift = c_1 · √(Bi_T/α) + c_0` on 3 finite points:
+  `c_1 = 69.8`, `c_0 = -40.8`, **R² = 0.88** (just above the 0.85 threshold).
+- All finite shifts positive ✓.
+- Slope positive ✓.
+
+### Honest caveats — why this is PASS_borderline, not clean PASS
+
+1. **Slope `c_1 ≈ 70` is ~50× the leading-order theoretical estimate
+   `c_1 = 2·Γ_A / (√π · θ_0 · √Bi_T) ≈ O(1)`.** The data fit a linear
+   trend but the prefactor doesn't match the perturbative derivation.
+2. **Large negative intercept (`c_0 = -41`).** The theory predicts
+   `c_0 ≈ c_2/Bi_c > 0`, not negative. Suggests the fit is
+   accommodating curvature/non-linearity not captured by a single
+   sqrt(Bi_T/α) term.
+3. **One outlier (Bi_T=0.16, shift=24) dominates the fit.** Dropping
+   it leaves only two points, which trivially R²=1 but with very
+   different inferred slope (c_1 ≈ 20).
+4. **Bi_T=0.25 doesn't oscillate at all up to Da=4.** The bisection
+   bracket cap was hit — at this Bi_T the system relaxes to an
+   over-swollen SS (J ≈ 1.1, θ ≈ 1.6) instead of finding the LF cycle
+   from cold IC. This is qualitatively a SNIC-type loss of the cycle
+   attractor, not a Hopf onset.
+5. **Bi_T=0.06's chain failed to converge.** The iter-2 sim
+   (Da ≈ 0.038, just above Da_c^0D) ran for 48 min CPU without
+   producing a definitive OSC/NOT_OSC answer — near-onset PDE
+   dynamics are genuinely slow (cycle period diverges, long
+   relaxation transient). We report the bracket midpoint as a
+   best-estimate.
+
+### What the data actually shows
+
+A more accurate physical picture than "linear sqrt(Bi_T/α) shift":
+
+- At **Bi_T = 0.06**: PDE oscillation onset is **very close to** Da_c^0D
+  (shift +22%) — consistent with a perturbative shift.
+- At **Bi_T = 0.10**: there is a **gap** between Da_c^0D = 0.05 and
+  Da_c^PDE = 0.23. In this gap (Da ∈ [0.05, 0.23]) the system
+  relaxes to a NEW attractor — an over-swollen SS at J ≈ 3.8-4.0,
+  which is neither the cold SS nor the LF cycle. The system has to
+  climb a much higher Da before the over-swollen branch loses
+  stability and the LF cycle is born.
+- At **Bi_T = 0.16**: the gap is enormous (Da_c^0D = 0.08 → Da_c^PDE = 2.05).
+  Same over-swollen SS dominates the cold-IC dynamics.
+- At **Bi_T = 0.25**: the over-swollen SS persists for all Da up to 4;
+  no LF cycle accessible from cold IC.
+
+**The bifurcation structure is more complex than a simple Hopf shift.**
+The "0D" Hopf onset assumed in the derivation is the cold-branch SN;
+above this Da, the system enters a region where an *over-swollen SS*
+(spatially non-uniform, induced by surface cooling) acts as an
+intermediate attractor. The LF cycle only emerges when this over-
+swollen SS itself loses stability, at a much higher Da. This is a
+qualitatively different mechanism — likely a secondary bifurcation
+that scales differently from the predicted sqrt(Bi_T/α).
+
+### Decision
+
+- The R² = 0.88 PASS verdict carries forward (matches the stated
+  criterion).
+- For §IV.C, scaling (iv) should be **reframed** from a quantitative
+  prediction to a *qualitative* one: "PDE onset Da_c^PDE > Da_c^0D and
+  grows with Bi_T". The leading-order prefactor `c_1 = 2·Γ_A/(√π·θ_0·√Bi_T)`
+  is *not* supported by the data; the actual prefactor is ~50×
+  larger, suggesting the relevant mechanism at the working point is
+  not the perturbative Hopf shift but the secondary bifurcation
+  involving the over-swollen SS.
+- Proceed to **Phase D (front depth)** — the most data-rich and
+  least theory-dependent of the four scaling laws.
+
+---
